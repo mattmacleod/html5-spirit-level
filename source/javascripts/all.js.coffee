@@ -25,20 +25,12 @@ $ ->
     plot.setupGrid()
     plot.draw()
 
-  samples = 0
-
-  $(window).on "devicemotion", (e) ->
-    samples++
+  $(window).on "deviceorientation", (e) ->
     window.accelerationValues.push
-      x: e.originalEvent.accelerationIncludingGravity.x - e.originalEvent.acceleration.x
-      y: e.originalEvent.accelerationIncludingGravity.y - e.originalEvent.acceleration.y
-      z: e.originalEvent.accelerationIncludingGravity.z - e.originalEvent.acceleration.z
+      x: e.originalEvent.alpha
+      y: e.originalEvent.beta
+      z: e.originalEvent.gamma
     window.accelerationValues = window.accelerationValues.slice -100
     updateGraph()
 
   drawGraph()
-
-  window.setInterval ->
-    $("#samplecounter").text "Samples: #{ samples }"
-    samples = 0
-  , 1000
