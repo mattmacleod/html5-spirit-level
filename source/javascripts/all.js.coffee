@@ -1,48 +1,80 @@
 #=require "lib/jquery"
-#=require "lib/flot"
 
 $ ->
-  window.accelerationValues = []
 
-  drawGraph = ->
-    $.plot $("#graph"), [{data: []}], {}
+  window.appConfig =
+    snapRadius: 4
+    squareColor: 'green'
 
-  updateGraph = ->
-    i = 0
-    points = 
-      x:[]
-      y:[]
-      z:[]
+  canvas  = $('#canvas')[0]
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight
 
-    window.accelerationValues.forEach (e) ->
-      points.x.push [i,e.x]
-      points.y.push [i,e.y]
-      points.z.push [i,e.z]
-      i++
+  context = canvas.getContext('2d')
+  width = canvas.width
+  height = canvas.height
+  centerX = width / 2
+  centerY = height / 2
+  radius  = Math.min(width, height) * 0.33
 
-    plot = $("#graph").data "plot"
-    plot.setData [{data: points.x}, {data: points.y}, {data: points.z}]
-    plot.setupGrid()
-    plot.draw()
+  context.font = "100 200pt 'Helvetica Neue'"
+  context.textAlign = "center"
+  context.textBaseline = "middle"
 
+  drawCanvas = (x1,y1,x2,y2,angle) ->
 
-  sphere = $('#sphere')
-  updateSphere = ->
-    v = window.accelerationValues.slice(-1)[0]
-    x = v.x
-    y = v.y
-    z = v.z
-    sphere.css
-      "-webkit-transform": "rotateX(#{x}deg) rotateY(#{y}deg) rotateZ(#{z}deg)"
+    # We will change some operations if we're at square
+    isZero = (x1 == x2 == y1 == y2 == 0)
+
+    # Clear
+    context.globalCompositeOperation = 'source-over'
+    context.fillStyle = if isZero then window.appConfig.squareColor else 'black'
+    context.fillRect 0, 0, width, height
+    unless isZero
+      context.globalCompositeOperation = 'difference' 
+
+    # Calculate positions
+    firstCircleCenterX = centerX + x1
+    firstCircleCenterY = centerY + y1
+    secondCircleCenterX = centerX + x2
+    secondCircleCenterY = centerY + y2
+
+    # Circle 1
+    context.beginPath()
+    context.arc firstCircleCenterX, firstCircleCenterY, radius+10, 0, 2 * Math.PI, false
+    context.fillStyle = 'white';
+    context.fill()
+    context.closePath()
+
+    # Circle 2
+    context.beginPath()
+    context.arc secondCircleCenterX, secondCircleCenterY, radius, 0, 2 * Math.PI, false
+    context.fillStyle = if isZero then window.appConfig.squareColor else 'white'
+    context.fill()
+    context.closePath()
+
+    # Text
+    context.fillStyle = 'white'
+    context.fillText "#{ angle }°", centerX, centerY
 
   $(window).on "deviceorientation", (e) ->
-    window.accelerationValues.push
-      z: e.originalEvent.alpha
-      x: e.originalEvent.beta
-      y: e.originalEvent.gamma
-    window.accelerationValues = window.accelerationValues.slice -100
-    updateGraph()
-    updateSphere()
+    x = e.originalEvent.beta
+    y = e.originalEvent.gamma
+    z = e.originalEvent.alpha
+
+    x1 = (y/90) * width
+    x2 = x1 * -1
+
+    y1 = (x/180) * height
+    y2 = y1 * -1
+
+    # Calculate the angle from square
+    angle = Math.round(Math.sqrt Math.pow(y,2) + Math.pow(x,2))
+
+    # If we are within tolerance, snap to zero
+    if Math.abs(x1) < window.appConfig.snapRadius && Math.abs(y1) < window.appConfig.snapRadius
+      x1 = x2 = y1 = y2 = 0
+      angle = 0
 
 
-  drawGraph()
+    drawCanvas(x1,y1,x2,y2, angle)
