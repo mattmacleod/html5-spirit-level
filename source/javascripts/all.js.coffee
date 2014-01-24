@@ -76,10 +76,10 @@ $ ->
     y = e.originalEvent.gamma
     z = e.originalEvent.alpha
 
-    x1 = (y/45) * canvas.width
+    x1 = (y/30) * canvas.width
     x2 = x1 * -1
 
-    y1 = (x/90) * canvas.height
+    y1 = (x/70) * canvas.height
     y2 = y1 * -1
 
     # Calculate the angle from square
