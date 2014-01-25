@@ -5,9 +5,6 @@ $ ->
   window.app =
     zeroColor: 'green'
     zeroTransitionTime: 15
-
-  canvas  = $('#canvas')[0]
-  context = canvas.getContext('2d')
   
   timeAtZero = 0
 
@@ -115,8 +112,6 @@ $ ->
       context.fillRect 0, 0, canvas.width, canvas.height
 
 
-  resizeCanvas()
-
   $(window).on "deviceorientation", (e) ->
     x = e.originalEvent.beta
     y = e.originalEvent.gamma
@@ -127,6 +122,13 @@ $ ->
     angleFromFlat = Math.round(Math.sqrt Math.pow(y,2) + Math.pow(x,2))
     drawCircles x, y, z, angleFromFlat
 
+  if window.orientation != undefined
+    $("body").append "<canvas id='canvas'/>"
+    canvas  = $('#canvas')[0]
+    context = canvas.getContext('2d')
+    resizeCanvas()
+    $(window).on "resize orientationchange", resizeCanvas
+    $("body").on "touchstart", -> false
 
-  $(window).on "resize orientationchange", resizeCanvas
-  $("body").on "touchstart", -> false
+  else
+    $("body").append "<div id='unsupported'>This device does not support orientation events. Sorry!</div>"
