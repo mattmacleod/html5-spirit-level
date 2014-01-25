@@ -4,9 +4,12 @@ $ ->
 
   window.app =
     zeroColor: 'green'
+    zeroTransitionTime: 15
 
   canvas  = $('#canvas')[0]
   context = canvas.getContext('2d')
+  
+  timeAtZero = 0
 
   resizeCanvas = ->
     window.devicePixelRatio ||= 1
@@ -26,6 +29,7 @@ $ ->
 
   drawCircles = (x, y, z, angle) ->
 
+    # Fix angles if we have rotated the device
     if window.app.isHorizontal
       xprime = y
       y = x
@@ -36,8 +40,20 @@ $ ->
 
     # If we are within 1 degree, snap to zero
     if angle==0
+      if timeAtZero < 0
+        timeAtZero = 0
+      else
+        timeAtZero++
+        timeAtZero = Math.min(timeAtZero, window.app.zeroTransitionTime)
       x1 = x2 = y1 = y2 = 0
+
     else
+      if timeAtZero > window.app.zeroTransitionTime
+        timeAtZero = window.app.zeroTransitionTime
+      else
+        timeAtZero--
+        timeAtZero = Math.max(timeAtZero, 0)
+
       x1 = (y/30) * canvas.width
       x2 = x1 * -1
 
@@ -89,6 +105,15 @@ $ ->
     context.translate (canvas.width/2), (canvas.height/2)
     context.rotate -1 * contextRotationAngle
     context.translate (canvas.width/-2), (canvas.height/-2)
+
+    # Add zero colour
+    if timeAtZero > 0
+      progressToZero = timeAtZero / window.app.zeroTransitionTime
+      additionalColor = "rgb(0,#{ Math.round(progressToZero * 75) },0)"
+      context.globalCompositeOperation = 'lighter'
+      context.fillStyle = additionalColor
+      context.fillRect 0, 0, canvas.width, canvas.height
+
 
   resizeCanvas()
 
