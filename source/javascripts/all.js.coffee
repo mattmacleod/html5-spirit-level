@@ -9,18 +9,30 @@ $ ->
   context = canvas.getContext('2d')
 
   resizeCanvas = ->
-    canvas.width  = window.innerWidth
-    canvas.height = window.innerHeight
+    window.devicePixelRatio ||= 1
+    canvas.width = window.outerWidth * window.devicePixelRatio              
+    canvas.height = window.outerHeight * window.devicePixelRatio              
 
     window.app.centerX = canvas.width / 2
     window.app.centerY = canvas.height / 2
     window.app.radius  = Math.min(canvas.width, canvas.height) * 0.33
+    window.app.isHorizontal = Math.abs(window.orientation) == 90
 
-    context.font = "100 200pt 'Helvetica Neue'"
+    context.font = "100 100pt 'Helvetica Neue'"
     context.textAlign = "center"
     context.textBaseline = "middle"
 
+
+
   drawCircles = (x, y, z, angle) ->
+
+    if window.app.isHorizontal
+      xprime = y
+      y = x
+      x = xprime
+      if window.orientation == 90
+        x = -x
+        y = -y
 
     # If we are within 1 degree, snap to zero
     if angle==0
@@ -48,14 +60,14 @@ $ ->
       context.globalCompositeOperation = 'difference' 
 
     # Calculate positions
-    firstCircleCenterX = centerX + x1
-    firstCircleCenterY = centerY + y1
+    firstCircleCenterX =  centerX + x1
+    firstCircleCenterY =  centerY + y1
     secondCircleCenterX = centerX + x2
     secondCircleCenterY = centerY + y2
 
     # Circle 1
     context.beginPath()
-    context.arc firstCircleCenterX, firstCircleCenterY, radius+10, 0, 2 * Math.PI, false
+    context.arc firstCircleCenterX, firstCircleCenterY, radius+5, 0, 2 * Math.PI, false
     context.fillStyle = 'white';
     context.fill()
     context.closePath()
@@ -91,4 +103,5 @@ $ ->
     drawCircles x, y, z, angleFromFlat
 
 
-  $(window).on "resize", resizeCanvas
+  $(window).on "resize orientationchange", resizeCanvas
+  $("body").on "touchstart", -> false
